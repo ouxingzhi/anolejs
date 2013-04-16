@@ -39,8 +39,25 @@ void function(window,document){
 		return root;
 	}
 	NS('Anole');
-         
+    Anole.NS('debug').extend({
+        /* 显示所有调试 */
+        ENUM_ALL:7,
+        /* 显示调试 */
+        ENUM_DEBUG:1,
+        /* 显示错误 */
+        ENUM_ERROR:2,
+        /* 显示警告 */
+        ENUM_WARNING:4,
+        log:function(tag,message){
+            if(Anole.config.debug & tag){
+                console.log(message);
+            }
+        }
+    });
 	Anole.extend({
+            config:{
+                debug:Anole.debug.ENUM_ALL
+            }
             Type:Type,
             is:function(obj){
                 var type = typeof obj;
@@ -60,14 +77,7 @@ void function(window,document){
                 if(Type.isError(obj)) return 'error';
             }
 	});
-        Anole.NS('console').extend({
-            log:function(tag,message){
-                console.log(message);
-            }
-        });
-    Anole.NS('config').extend({
-        debug:
-    });
+    
 	Anole.NS('Class').extend({
 		/**
 		 * 定义类
@@ -111,32 +121,32 @@ void function(window,document){
 			return Class;
 		})()
 	});
-        /*
-        * Object 命名空间 
-        */
-        Anole.NS('Object').extend({
-            /**
-             *  取对象的所有的key
-             *  @param obj {Object} 对象
-             *  @return {Array}     所有的key
-             */
-            getKey:function(obj){
-                var k = [];
-                for(var i in obj){
-                    if(obj.hasOwnProperty(i)) k.push(i);
-                }
-                return k;
+    /*
+    * Object 命名空间 
+    */
+    Anole.NS('Object').extend({
+        /**
+         *  取对象的所有的key
+         *  @param obj {Object} 对象
+         *  @return {Array}     所有的key
+         */
+        getKey:function(obj){
+            var k = [];
+            for(var i in obj){
+                if(obj.hasOwnProperty(i)) k.push(i);
             }
-        });
-        Anole.NS('Array').extend({
-            each:function(){
-            valueOf:function(obj){
-                //todo
-            }
-        });    
-        /*
-        * Function命名空间
-        */
+            return k;
+        }
+    });
+    Anole.NS('Array').extend({
+        each:function(){
+        valueOf:function(obj){
+            //todo
+        }
+    });    
+    /*
+    * Function命名空间
+    */
 	Anole.NS('Function').extend({
         /**
          * 绑定函数运行在那个对象
