@@ -1,4 +1,6 @@
 void function(window,document){
+	var slice = Array.prototype.slice;
+
 	//命名空间对象
 	var NSObject = function(){
 		if(!this instanceof arguments.callee) return new arguments.callee();
@@ -26,29 +28,54 @@ void function(window,document){
 					return Type(o) === '[object '+type+']';
 				};
 			}(types[i]);
-	}(Type,['Number','String','String','Function','Object','Date','RegExp','Undefined','Null']);
-	var UseNameSpace = NSPrototype.UseNameSpace = function(NS,root){
+	}(Type,['Number','Boolean','String','Function','Object','Date','RegExp','Error','Undefined','Null']);
+	var NS = NSPrototype.NS = function(ns,root){
 		root = root || this;
-		NS = Type.isString(NS) ? NS.split('.') : [];
-		for(var i=0,len=NS.length;i<len;i++){
-			if(!root[NS[i]]) root[NS[i]] = new NSObject();
-			root = root[NS[i]];
+		ns = Type.isString(ns) ? ns.split('.') : [];
+		for(var i=0,len=ns.length;i<len;i++){
+			if(!root[ns[i]]) root[ns[i]] = new NSObject();
+			root = root[ns[i]];
 		}
 		return root;
 	}
-	UseNameSpace('Anole');
-	Anole.UseNameSpace('core').extend({
-		Type:Type
-	});
+	NS('Anole');
+         
 	Anole.extend({
+            Type:Type,
+            is:function(obj){
+                var type = typeof obj;
+                switch(type){
+                    case 'null':
+                    case 'undefined':
+                    case 'number':
+                    case 'boolean':
+                    case 'string':
+                    case 'function':
+                        return type;
+                }
+                if(Type.isObject(obj)) return 'object';
+                if(Type.isArray(obj)) return 'array';
+                if(Type.isDate(obj)) return 'date';
+                if(Type.isRegExp(obj)) return 'regexp';
+                if(Type.isError(obj)) return 'error';
+            }
+	});
+        Anole.NS('console').extend({
+            log:function(tag,message){
+                console.log(message);
+            }
+        });
+    Anole.NS('config').extend({
+        debug:
+    });
+	Anole.NS('Class').extend({
 		/**
 		 * 定义类
 		 × @param {Function} 可选 要继承的类
 		 * @param {Object} 	 必填 实现类的成员
 		 * @return {Function} 定义的类
-		 × @author ou xing zhi
 		 */
-		Class:(function(){
+		create:(function(){
 			var slice = [].slice;
 			function bind(fun,obj){
 				var a = slice.call(arguments,2);
@@ -61,10 +88,10 @@ void function(window,document){
 				var args = slice.call(arguments,0),
 					propertys = args.pop(),
 					parent = args.shift(),
-					empty = function(){}
+					empty = function(){},
 					Class = function(){
 						this.initialize.apply(this,arguments);
-					}
+					};
 				typeof parent != 'function' && (parent = function(){});
 				empty.prototype = parent.prototype;
 				Class.prototype = new empty();
@@ -83,5 +110,47 @@ void function(window,document){
 			}
 			return Class;
 		})()
+	});
+        /*
+        * Object 命名空间 
+        */
+        Anole.NS('Object').extend({
+            /**
+             *  取对象的所有的key
+             *  @param obj {Object} 对象
+             *  @return {Array}     所有的key
+             */
+            getKey:function(obj){
+                var k = [];
+                for(var i in obj){
+                    if(obj.hasOwnProperty(i)) k.push(i);
+                }
+                return k;
+            }
+        });
+        Anole.NS('Array').extend({
+            each:function(){
+            valueOf:function(obj){
+                //todo
+            }
+        });    
+        /*
+        * Function命名空间
+        */
+	Anole.NS('Function').extend({
+        /**
+         * 绑定函数运行在那个对象
+         * @param {type} fun
+         * @param {type} space
+         * @param {type} args
+         * @returns {unresolved}
+         */
+        bind:function(fun,space,args){
+                Type.isArray(args) || (args = [args]);
+                return function(){
+                        var a = args.concat(slice.call(arguments));
+                        fun.apply(space,a);
+                }
+        }
 	});
 }(window,document);
