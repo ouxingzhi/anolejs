@@ -4,7 +4,18 @@
 		<meta charset="utf-8" />
 		<title>anolejs</title>
 		<script type="text/javascript" src="../src/core.js"></script>
+        <script type="text/javascript" src="../src/dom.js"></script>
+        <script type="text/javascript">
+            window.onload = function(){
+                var els= Anole.dom.query('[class|="cls"]');
+                alert(els.length);
+            };
+        </script>
 	</head>
 	<body>
+        <div id="id2">
+            <div class="cls-show"></div>
+            <div class=""></div>
+        </div>
 	</body>
 </html>
