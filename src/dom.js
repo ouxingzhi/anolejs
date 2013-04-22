@@ -100,15 +100,20 @@ void function (Anole, window, document) {
 			}
 			var PATH = {
 				' ' : function (parent, op, dir, struct) {
-					var results = [],el;
+					var results = [],el,els;
 					if (struct[2] && parent.getElementById) {
                         el = parent.getElementById(struct[2]);
 						if(el && (!struct[1] || struct[1].toLowerCase()===el.nodeName.toLowerCase())) results.push(el);
 					}else if(struct[1]){
-                        push.apply(results,parent.getElementsByTagName(struct[1]));
+                        try{
+							els = parent.getElementsByTagName(struct[1]);
+							push.apply(results,els);
+						}catch(e){
+							for(var i=0;i<els.length;i++) results.push(els[i]);
+						}
                     }else{
 						try{
-							var els = parent.getElementsByTagName('*');
+							els = parent.getElementsByTagName('*');
 							push.apply(results,els);
 						}catch(e){
 							for(var i=0;i<els.length;i++) results.push(els[i]);
@@ -207,11 +212,14 @@ void function (Anole, window, document) {
                 null,
                 null,
 				//Pseudo Classes
-				function (pseude,results,struct,i) {
+				function (pseude,results,struct,t) {
                     var _results = [],
-                        val = struct[t+1];
+						pseudo = struct[t],
+                        val = struct[t+1],
+						dispose = PSEUDO[pseudo];
+					if(!dispose) return _results;
                     for(var i=0;i<results.length;i++){
-                       
+                       dispose(results,_results,val);
                     }
                     return _results;
                 }
@@ -280,55 +288,55 @@ void function (Anole, window, document) {
             };
             
             var PSEUDO = {
-                'not':function(results,pseude,val){
+                'not':function(results,_results,val){
                     
                 },
-                'root':function(results,pseude,val){
+                'root':function(results,_results,val){
                     
                 },
-                'first-child':function(results,pseude,val){
+                'first-child':function(results,_results,val){
                     
                 },
-                'last-child':function(results,pseude,val){
+                'last-child':function(results,_results,val){
                     
                 },
-                'only-child':function(results,pseude,val){
+                'only-child':function(results,_results,val){
                     
                 },
-                'nth-child':function(results,pseude,val){
+                'nth-child':function(results,_results,val){
                     
                 },
-                'nth-last-child':function(results,pseude,val){
+                'nth-last-child':function(results,_results,val){
                     
                 },
-                'first-of-type':function(results,pseude,val){
+                'first-of-type':function(results,_results,val){
                     
                 },
-                'last-of-type':function(results,pseude,val){
+                'last-of-type':function(results,_results,val){
                     
                 },
-                'only-of-type':function(results,pseude,val){
+                'only-of-type':function(results,_results,val){
                     
                 },
-                'nth-of-type':function(results,pseude,val){
+                'nth-of-type':function(results,_results,val){
                     
                 },
-                'nth-last-of-type':function(results,pseude,val){
+                'nth-last-of-type':function(results,_results,val){
                     
                 },
-                'empty':function(results,pseude,val){
+                'empty':function(results,_results,val){
                     
                 },
-                'checked':function(results,pseude,val){
+                'checked':function(results,_results,val){
                     
                 },
-                'enabled':function(results,pseude,val){
+                'enabled':function(results,_results,val){
                     
                 },
-                'disabled':function(results,pseude,val){
+                'disabled':function(results,_results,val){
                     
                 },
-                'target':function(results,pseude,val){
+                'target':function(results,_results,val){
                     
                 }
             };
