@@ -1,331 +1,258 @@
 /**
- * DOM相关操作
+ * Anolejs 一个优雅的javascript framewrok
  */
-void function (Anole, window, document) {
-	var strTrim = Anole.String.trim,
-	Type = Anole.Type;
-	Anole.NS('dom').extend((function () {
-			var simpExp = /^(?:#(\w+)|\.(\w+)|(\w+|\*))$/i,
-			dirExp = /(?:\s|>|\+|~(?!=))/i,
-			cssExp = /^(\*|[\w-]+)?(?:#([\w-]+))?(?:\.([\w-]+))?(?:\[([\w-]+)(?:([~\^$*|]?=)['"]([\w-]+)['"])?\])?(?:\:([\w-]+)(?:\(([^\(\)]*)\))?)?$/i;
-			push = Array.prototype.push,
-            slice = Array.prototype.slice;
-			/**
-			 * 通用元素选择器,支持IE6+,FF,CHROME,支持CSS3
-			 * @param selector {String} css选择器
-			 * @param root {Node} node对象
-			 * @param results {Array} 要放置的数组
-			 * @reutrn {Array<Element>} 返回element的数组
-			 */
-			function query(selector, root, results) {
-				results = results || [];
-				root = root || document;
-				/*
-				if(!root.getElementsByTagName) return results;
-				if(!selector) return results;
-				var simpMatch = simpExp.exec(selector),cols;
-				if(simpMatch[1] && root.getElementById){
-				cols = root.getElementById(simpMatch[1]);
-				results.push(cols);
-				return results;
-				}else if(simpMatch[2] && root.getElementsByClassName){
-				cols = root.getElementsByClassName(simpMatch[2]);
-				cols && push.apply(results,cols);
-				return results;
-				}else if(simpMatch[3]){
-				cols = root.getElementsByTagName(simpMatch[3]);
-				cols && push.apply(results,cols);
-				return results;
-				}
-				if(root.querySelectorAll){
-				cols = root.querySelectorAll(selector);
-				cols && push.apply(results,cols);
-				return results;
-				}*/
-				return select(selector, root, results);
-			}
-			function select(selector, root, results) {
-				var paths = selector.split(',');
-				for (var i = 0; i < paths.length; i++) {
-					push.apply(results, selectPath(paths[i], root));
-				}
-				return results;
-			}
-			function selectPath(path, root) {
-				path = strTrim(path).replace(/\s+(>|\+|~)\s+/ig, '$1').replace(/\s+/ig, ' ');
-				var dirs = path.split(dirExp),
-				ops = path,
-				i;
-				for (i = 0; i < dirs.length; i++) {
-					if (!dirs[i])
-						throw new Error('css表达式语法错误');
-					ops = ops.replace(dirs[i], '');
-				}
-				ops = ops.split('');
-				if (Math.max(dirs.length - 1, 0) !== ops.length) {
-					throw new Error('css表达式语法错误');
-				}
-				ops.unshift(' ');
-                return iteratorPath(root,dirs,ops);
-			}
-			function iteratorPath(parent, dirs, ops) {
-				var results = [],
-				i;
-				if (Type.isArray(parent)) {
-					for (i = 0; i < parent.length; i++) {
-						push.apply(results, iteratorPath(parent[i], dirs, ops));
-					}
-				} else {
-					if (!parent.getElementsByTagName)
-						return results;
-					parent = push.apply(results, selectOfDir(parent, dirs, ops));
-				}
-				return results;
-			}
-			function selectOfDir(parent, dirs, ops) {
-				var op = ops.shift(),
-				dir = dirs.shift();
+void function (window, document) {
+	var slice = Array.prototype.slice;
 
-				if (!dir || !op)
-					return parent && [parent] || [];
-				var struct = cssExp.exec(dir);
-				parent = PATH[op](parent, op, dir, struct);
-				if (!parent || !parent.length)
-					return [];
-                if(dirs.length){
-                    return iteratorPath(parent, dirs, ops);
-                }else{
-                    return parent;
-                }
+	//命名空间对象
+	var NSObject = function () {
+		if (!this instanceof arguments.callee)
+			return new arguments.callee();
+	},
+	NSPrototype = NSObject.prototype = {
+		constructor : Object
+	};
+	var extend = NSPrototype.extend = function (sub, sup) {
+		var root = sub;
+		if (!sup) {
+			root = this;
+			sup = sub;
+		}
+		for (var i in sup)
+			root[i] = sup[i];
+	}
+	var Type = function (f) {
+		return function (o) {
+			return f.call(o);
+		};
+	}
+	(Object.prototype.toString);
+	void function (Type, types) {
+		for (var i = 0, len = types.length; i < len; i++)
+			Type['is' + types[i]] = function (type) {
+				return function (o) {
+					return Type(o) === '[object ' + type + ']';
+				};
 			}
-			var PATH = {
-				' ' : function (parent, op, dir, struct) {
-					var results = [],el;
-					if (struct[2] && parent.getElementById) {
-                        el = parent.getElementById(struct[2]);
-						if(el && (!struct[1] || struct[1].toLowerCase()===el.nodeName.toLowerCase())) results.push(el);
-					}else if(struct[1]){
-                        push.apply(results,parent.getElementsByTagName(struct[1]));
-                    }else{
-                        push.apply(results,slice.call(parent.getElementsByTagName('*')));
-                    }
-                    if(!results.length) return results;
-					for (var i = 2; i < struct.length; i++) {
-						if (struct[i] && FILTER[i]) {
-							results = FILTER[i](struct[i], results,struct,i);
-						}
-					}
-                    return results;
-				},
-				'>' : function (parent, op, dir, struct) {
-                    var results = [],childs = parent.childNodes;
-                    for(var t=0;t<childs.length;t++){
-                        if(childs[t].nodeType === 1)results.push(childs[t]);
-                    }
-                    if(!results.length) return results;
-					for (var i = 1; i < struct.length; i++) {
-						if (struct[i] && FILTER[i]) {
-							results = FILTER[i](struct[i], results,struct,i);
-						}
-					}
-                    return results;
-                },
-				'+' : function (parent, op, dir, struct) {
-                    var results = [],nextSibling = parent;
-                    while(nextSibling = nextSibling.nextSibling){
-                        if(nextSibling.nodeType === 1) break;
-                    }
-                    nextSibling && results.push(nextSibling);
-                    if(!results.length) return results;
-					for (var i = 1; i < struct.length; i++) {
-						if (struct[i] && FILTER[i]) {
-							results = FILTER[i](struct[i], results,struct,i);
-						}
-					}
-                    return results;
-                },
-				'~' : function (parent, op, dir, struct) {
-                    var results = [],
-                        parentNode = parent.parentNode,
-                        childs;
-                    if(parentNode && (childs = parentNode.childNodes) && childs.length){
-                        for(var t=0;t<childs.length;t++){
-                            if(parent !== childs[t] && childs[t].nodeType === 1)results.push(childs[t]);
-                        }
-                    }
-                    if(!results.length) return results;
-					for (var i = 1; i < struct.length; i++) {
-						if (struct[i] && FILTER[i]) {
-							results = FILTER[i](struct[i], results,struct,i);
-						}
-					}
-                    return results;
-                }
-			};
-			var FILTER = [null,
-				//Tag Name
-				function (tag, results,struct,t) {
-					var _results = [];
-                    for(var i=0;i<results.length;i++){
-                        if(results[i].nodeName.toLowerCase() === tag.toLowerCase()) _results.push(results[i]);
-                    }
-                    return _results;
-				},
-				//Id
-				function (id,results,struct,t) {
-                    var _results = [];
-                    for(var i=0;i<results.length;i++){
-                        if(results[i].id && results[i].id === id) _results.push(results[i]);
-                    }
-                    return _results;
-                },
-				//Class
-				function (cls,results,struct,t) {
-                    var _results = [];
-                    for(var i=0;i<results.length;i++){
-                        if(results[i].className && results[i].className.match(new RegExp('(?:\\s|^)'+cls+'(?:\\s|$)','ig'))) _results.push(results[i]);
-                    }
-                    return _results;
-                },
-				//Attribute
-				function (attr,results,struct,t) {
-                    var _results = [],
-                        op = struct[t+1],
-                        val = struct[t+2],
-                        attrs,
-                        i,t;
-                    for(i=0;i<results.length;i++){
-                        ATTR[op || ''](results[i].attributes,attr,val) && _results.push(results[i]);
-                    }
-                    return _results;
-                },
-                null,
-                null,
-				//Pseudo Classes
-				function (pseude,results,struct,i) {
-                    var _results = [],
-                        val = struct[t+1];
-                    for(var i=0;i<results.length;i++){
-                       
-                    }
-                    return _results;
-                }
-			];
-            var ATTR = {
-                '':function(attrs,name,val){
-                    for(var i=0;i<attrs.length;i++){
-                        if(attrs.item(i).name === name) return true;
-                    }
-                    return false;
-                },
-                '=':function(attrs,name,val){
-                    var attr;
-                    for(var i=0;i<attrs.length;i++){
-                        attr = attrs.item(i);
-                        if(attr.name === name && attr.value === val) return true;
-                    }
-                    return false;
-                },
-                '~=':function(attrs,name,val){
-                    var attr;
-                    for(var i=0;i<attrs.length;i++){
-                        attr = attrs.item(i);
-                        if(attr.name === name && (attr.value+'').match(new RegExp('(?:\\s|^)'+val+'(?:\\s|$)','ig'))) return true;
-                    }
-                    return false;
-                },
-                '^=':function(attrs,name,val){
-                    var attr;
-                    for(var i=0;i<attrs.length;i++){
-                        attr = attrs.item(i);
-                        if(attr.name === name && (attr.value+'').match(new RegExp('^'+val,'ig'))) return true;
-                    }
-                    return false;
-                },
-                '$=':function(attrs,name,val){
-                    var attr;
-                    for(var i=0;i<attrs.length;i++){
-                        attr = attrs.item(i);
-                        if(attr.name === name && (attr.value+'').match(new RegExp(val+'$','ig'))) return true;
-                    }
-                    return false;
-                },
-                '*=':function(attrs,name,val){
-                    var attr;
-                    for(var i=0;i<attrs.length;i++){
-                        attr = attrs.item(i);
-                        if(attr.name === name && (attr.value+'').indexOf(val) >-1) return true;
-                    }
-                    return false;
-                },
-                '|=':function(attrs,name,val){
-                    var attr;
-                    for(var i=0;i<attrs.length;i++){
-                        attr = attrs.item(i);
-                        if(attr.name === name && (attr.value+'').match(new RegExp('^'+val+'-','ig'))) return true;
-                    }
-                    return false;
-                }
-            };
-            
-            var PSEUDO = {
-                'not':function(results,pseude,val){
-                    
-                },
-                'root':function(results,pseude,val){
-                    
-                },
-                'first-child':function(results,pseude,val){
-                    
-                },
-                'last-child':function(results,pseude,val){
-                    
-                },
-                'only-child':function(results,pseude,val){
-                    
-                },
-                'nth-child':function(results,pseude,val){
-                    
-                },
-                'nth-last-child':function(results,pseude,val){
-                    
-                },
-                'first-of-type':function(results,pseude,val){
-                    
-                },
-                'last-of-type':function(results,pseude,val){
-                    
-                },
-                'only-of-type':function(results,pseude,val){
-                    
-                },
-                'nth-of-type':function(results,pseude,val){
-                    
-                },
-                'nth-last-of-type':function(results,pseude,val){
-                    
-                },
-                'empty':function(results,pseude,val){
-                    
-                },
-                'checked':function(results,pseude,val){
-                    
-                },
-                'enabled':function(results,pseude,val){
-                    
-                },
-                'disabled':function(results,pseude,val){
-                    
-                },
-                'target':function(results,pseude,val){
-                    
-                }
-            };
-			return {
-				query : query //,
-				//match:match,
+		(types[i]);
+	}
+	(Type, ['Number', 'Boolean', 'String', 'Array','Function', 'Object', 'Date', 'RegExp', 'Error', 'Undefined', 'Null']);
+	var NS = NSPrototype.NS = function (ns, root) {
+		root = root || this;
+		ns = Type.isString(ns) ? ns.split('.') : [];
+		for (var i = 0, len = ns.length; i < len; i++) {
+			if (!root[ns[i]])
+				root[ns[i]] = new NSObject();
+			root = root[ns[i]];
+		}
+		return root;
+	}
+	NS('Anole', window);
+	Anole.NS('debug').extend({
+		/* 显示所有调试 */
+		ENUM_ALL : 7,
+		/* 显示调试 */
+		ENUM_DEBUG : 1,
+		/* 显示错误 */
+		ENUM_ERROR : 2,
+		/* 显示警告 */
+		ENUM_WARNING : 4,
+		log : function (tag, message) {
+			if (Anole.config.debug & tag) {
+				console.log(message);
+			}
+		}
+	});
+	Anole.extend({
+		config : {
+			debug : Anole.debug.ENUM_ALL
+		},
+		setConfig : function (conf) {
+			if (!conf)
+				return;
+			for (var i in conf) {
+				if (conf.hasOwnProperty(i))
+					Anole.config[i] = conf[i];
+			}
+		},
+		Type : Type,
+		/**
+		 * 获得对象的类型
+		 * @param obj {any Object} 任何对象
+		 * @return {String} 为类型的字符串
+		 */
+		is : function (obj) {
+			var type = typeof obj;
+			switch (type) {
+			case 'null':
+			case 'undefined':
+			case 'number':
+			case 'boolean':
+			case 'string':
+			case 'function':
+				return type;
+			}
+			if (type === 'object' && obj === window)
+				return 'window';
+			if (type === 'object' && obj === document)
+				return 'document';
+			if (type === 'object' && obj.nodeType && obj.getAttribute)
+				return 'element';
+			if (Type.isObject(obj))
+				return 'object';
+			if (Type.isArray(obj))
+				return 'array';
+			if (Type.isDate(obj))
+				return 'date';
+			if (Type.isRegExp(obj))
+				return 'regexp';
+			if (Type.isError(obj))
+				return 'error';
+		},
+		/**
+		 * 判断变量是否为空
+		 * @param obj {any Object} 任何值
+		 * @return {Bootean}
+		 */
+		isEmpty : function (obj) {
+			return !(obj || (Anole.isArray(obj) && obj.length))
+		},
+		/**
+		 * 对一个数组或是对象进行循环处理
+		 * @param obj {Array|Object} 要循环的对象
+		 * @param fun {Function}
+		 * @reutrn void
+		 */
+		each : function (obj, fun, scope) {
+			if (Anole.isEmpty(obj) || !Anole.isFunction(fun))
+				return;
+			var i;
+			if (Anole.isObject(obj)) {
+				for (i in obj) {
+					if (obj.hasOwnProperty(i))
+						fun.call(scope, i, obj[i]);
+				}
+			} else if (Anole.isArray(obj)) {
+				for (i = 0; i < obj.length; i++) {
+					fun.call(scope, i, obj[i]);
+				}
+			}
+		}
+	});
 
+	Anole.NS('Class').extend({
+		/**
+		 * 定义类
+		× @param {Function} 可选 要继承的类
+		 * @param {Object} 	 必填 实现类的成员
+		 * @return {Function} 定义的类
+		 */
+		create : (function () {
+			var slice = [].slice;
+			function bind(fun, obj) {
+				var a = slice.call(arguments, 2);
+				return function () {
+					var args = a.concat(slice.call(arguments, 0));
+					fun.apply(obj, args);
+				};
 			}
-		})());
+			function Class() {
+				var args = slice.call(arguments, 0),
+				propertys = args.pop(),
+				parent = args.shift(),
+				empty = function () {},
+				Class = function () {
+					this.initialize.apply(this, arguments);
+				};
+				typeof parent != 'function' && (parent = function () {});
+				empty.prototype = parent.prototype;
+				Class.prototype = new empty();
+				var supInitialize = Class.prototype.initialize;
+				for (var i in propertys) {
+					Class.prototype[i] = propertys[i];
+				}
+				if (supInitialize && Class.prototype.initialize) {
+					var newInitialize = Class.prototype.initialize;
+					Class.prototype.initialize = function () {
+						newInitialize.apply(this, [bind(function () {
+									supInitialize.apply(this, arguments);
+								}, this)].concat(slice.call(arguments, 0)));
+					}
+				}
+				Class.prototype.constructor = parent;
+				return Class;
+			}
+			return Class;
+		})()
+	});
+	/*
+	 * Object 命名空间
+	 */
+	Anole.NS('Object').extend({
+		/**
+		 *  取对象的所有的key
+		 *  @param obj {Object} 对象
+		 *  @return {Array}     所有的key
+		 */
+		getKey : function (obj) {
+			var k = [];
+			for (var i in obj) {
+				if (obj.hasOwnProperty(i))
+					k.push(i);
+			}
+			return k;
+		}
+	});
+	Anole.NS('Array').extend({
+		/**
+		 * 判断值在数据中的位置，如不存在返回-1
+		 */
+		indexOf : function (val, arr) {
+			if (!arr)
+				return -1;
+			if (arr.indexOf) {
+				return arr.indexOf(val);
+			}else {
+				for (var i = 0; i < arr.length; i++) {
+					if (arr[i] === val)
+						return i;
+				};
+			}
+			return -1;
+		}
+	});
+	/*
+	 * Function命名空间
+	 */
+	Anole.NS('Function').extend({
+		/**
+		 * 绑定函数运行在那个对象
+		 * @param {type} fun
+		 * @param {type} space
+		 * @param {type} args
+		 * @returns {unresolved}
+		 */
+		bind : function (fun, space, args) {
+			Type.isArray(args) || (args = [args]);
+			return function () {
+				var a = args.concat(slice.call(arguments));
+				fun.apply(space, a);
+			}
+		}
+	});
+	/*
+	 * String命名空间
+	 */
+	Anole.NS('String').extend({
+		trim : function (str) {
+			return str.trim ? str.trim() : str.replace(/^\s+?|\s+?$/i, '');
+		}
+	});
+	/*
+	 * Date命名空间
+	 */
+	Anole.NS('Date').extend({
+        
+    });
 }
-(Anole, window, document);
+(window, document);
