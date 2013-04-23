@@ -3,12 +3,19 @@
 	<head>
 		<meta charset="utf-8" />
 		<title>anolejs</title>
+        <script type="text/javascript" src="sizzle.js"></script>
 		<script type="text/javascript" src="../src/core.js"></script>
         <script type="text/javascript" src="../src/dom.js"></script>
         <script type="text/javascript">
             window.onload = function(){
-                var els= Anole.dom.query('[class|="cls"]');
-                alert(els.length);
+                var start = new Date();
+                var selector = '#id2 div:empty';
+                for(var i=0;i<1;i++){
+                var els= Anole.dom.query(selector);
+                //var els = Sizzle(selector);
+                }
+                var time = new Date() - start;
+                alert(time + ':' +els.length);
             };
         </script>
 	</head>
