@@ -523,6 +523,8 @@ void function (Anole, window, document) {
                     }
                 },
                 'empty' : function (results, _results, val) {
+                    var id;
+                    console.log(results[0].className,results[1].className);
                     for (var i = 0; i < results.length; i++) {
                         if (results[i] && (!results[i].childNodes || !strTrim(results[i].innerHTML).length)) {
                             _results.push(results[i]);
