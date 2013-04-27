@@ -2,7 +2,8 @@
  * Anolejs 一个优雅的javascript framewrok
  */
 void function (window, document) {
-	var slice = Array.prototype.slice;
+	var slice = Array.prototype.slice,
+        push = Array.prototype.push;
 
 	//命名空间对象
 	var NSObject = function () {
@@ -137,7 +138,16 @@ void function (window, document) {
 					fun.call(scope, i, obj[i]);
 				}
 			}
-		}
+		},
+        $try:function($try,$catch,$finally){
+            try{
+                typeof $try === 'function' && $try();
+            }catch(e){
+                typeof $catch === 'function' && $catch();
+            }finally{
+                typeof $finally === 'function' && $finally();
+            }
+        }
 	});
 
 	Anole.NS('Class').extend({
@@ -219,7 +229,23 @@ void function (window, document) {
 				};
 			}
 			return -1;
-		}
+		},
+        insert:function(arr,val){
+            if(Type.isArray(arr) && val){
+                if(val && 'length' in val){
+                    Anole.$try(function(){
+                        push.apply(arr,val);
+                    },function(){
+                        for(var i=0;i<val.length;i++){
+                            arr.push(val[i]);
+                        }
+                    });
+                }else{
+                    arr.push(val);
+                }
+            }
+            return arr;
+        }
 	});
 	/*
 	 * Function命名空间

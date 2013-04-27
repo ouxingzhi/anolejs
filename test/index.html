@@ -6,23 +6,40 @@
         <script type="text/javascript" src="sizzle.js"></script>
 		<script type="text/javascript" src="../src/core.js"></script>
         <script type="text/javascript" src="../src/dom.js"></script>
+        <script src="http://files.cnblogs.com/rubylouvre/icarus.js"></script>
         <script type="text/javascript">
             window.onload = function(){
+                var messages = [];
                 var start = new Date();
-                var selector = '#id2 div:empty';
-                for(var i=0;i<1000;i++){
-                var els= Anole.dom.query(selector);
-                //var els = Sizzle(selector);
+                var selector = 'div .cls-show';
+                var count = 1;
+                for(var i=0;i<count;i++){
+                    var els= Anole.dom.query(selector);
                 }
                 var time = new Date() - start;
-                alert(time + ':' +els.length);
+                
+                messages.push('anole:'+ time + ':' +els.length);
+                start = new Date();
+                for(var i=0;i<count;i++){
+                    var els = Sizzle(selector);
+                }
+                time = new Date() - start;
+                messages.push('Sizzle:'+ time + ':' +els.length);
+                start = new Date();
+                for(var i=0;i<count;i++){
+                    var els = dom.query(selector);
+                }
+                time = new Date() - start;
+                messages.push('dom.query:'+ time + ':' +els.length);
+                console.log(messages.join('    '));
             };
         </script>
 	</head>
 	<body>
         <div id="id2">
-            <div class="cls-show"></div>
-            <div class=""></div>
+            <div class="cls-show">a</div>
+            <div class="">b</div>
+            <div class="">c</div>
         </div>
 	</body>
 </html>

@@ -5,7 +5,8 @@
  */
 void function (Anole, window, document) {
     var strTrim = Anole.String.trim,
-    Type = Anole.Type;
+    Type = Anole.Type,
+    _Array = Anole.Array;
     Anole.NS('dom').extend((function () {
             var simpExp = /^(?:#(\w+)|\.(\w+)|(\w+|\*))$/i,
             dirExp = /(?:\s|>|\+|~(?!=))/i,
@@ -28,6 +29,7 @@ void function (Anole, window, document) {
                     return results;
                 var simpMatch = simpExp.exec(selector),
                 cols;
+                /*
                 if (simpMatch) {
                     if (simpMatch[1] && root.getElementById) {
                         cols = root.getElementById(simpMatch[1]);
@@ -35,25 +37,25 @@ void function (Anole, window, document) {
                         return results;
                     } else if (simpMatch[2] && root.getElementsByClassName) {
                         cols = root.getElementsByClassName(simpMatch[2]);
-                        cols && push.apply(results, cols);
+                        _Array.insert(results, cols);
                         return results;
                     } else if (simpMatch[3]) {
                         cols = root.getElementsByTagName(simpMatch[3]);
-                        cols && push.apply(results, cols);
+                        _Array.insert(results, cols);
                         return results;
                     }
                 }
                 if (typeof root.querySelectorAll === 'function') {
                     cols = root.querySelectorAll(selector);
-                    cols && push.apply(results, cols);
+                    _Array.insert(results, cols);
                     return results;
-                }
-                return select(selector, root, results);
+                }*/
+                return unique(select(selector, root, results));
             }
             function select(selector, root, results) {
                 var paths = selector.split(',');
                 for (var i = 0; i < paths.length; i++) {
-                    push.apply(results, selectPath(paths[i], root));
+                    _Array.insert(results, selectPath(paths[i], root));
                 }
                 return results;
             }
@@ -79,12 +81,12 @@ void function (Anole, window, document) {
                 i;
                 if (Type.isArray(parent)) {
                     for (i = 0; i < parent.length; i++) {
-                        push.apply(results, iteratorPath(parent[i], dirs, ops));
+                        _Array.insert(results, iteratorPath(parent[i], dirs, ops));
                     }
                 } else {
                     if (!parent.getElementsByTagName)
                         return results;
-                    parent = push.apply(results, selectOfDir(parent, dirs, ops));
+                    _Array.insert(results, selectOfDir(parent, dirs, ops));
                 }
                 return results;
             }
@@ -104,6 +106,7 @@ void function (Anole, window, document) {
                     return parent;
                 }
             }
+
             function getChilds(el, tag) {
                 var childs = el.childNodes,
                 results = [];
@@ -136,6 +139,25 @@ void function (Anole, window, document) {
                 }
                 return total;
             }
+            //去重
+            function unique(arr){
+                if(arr.length <=1) return arr;
+                var l = [],k={},cur,i,t;
+                for(i=0,len=arr.length;i<len;i++){
+                    cur = arr[i];
+                    for(t=i+1;t<len;t++){
+                        if(cur === arr[t] && !k[t]){
+                            l.push(t);
+                            k[t] = true;
+                        }
+                    }
+                }
+                l = l.reverse();
+                for(i=0;i<l.length;i++){
+                    arr.splice(l[i],1);
+                }
+                return arr;
+            }
             /*
              * 层级关系选择
              */
@@ -149,21 +171,11 @@ void function (Anole, window, document) {
                         if (el && (!struct[1] || struct[1].toLowerCase() === el.nodeName.toLowerCase()))
                             results.push(el);
                     } else if (struct[1]) {
-                        try {
-                            els = parent.getElementsByTagName(struct[1]);
-                            push.apply(results, els);
-                        } catch (e) {
-                            for (var i = 0; i < els.length; i++)
-                                results.push(els[i]);
-                        }
+                        els = parent.getElementsByTagName(struct[1]);
+                        _Array.insert(results, els);
                     } else {
-                        try {
-                            els = parent.getElementsByTagName('*');
-                            push.apply(results, els);
-                        } catch (e) {
-                            for (var i = 0; i < els.length; i++)
-                                results.push(els[i]);
-                        }
+                        els = parent.getElementsByTagName('*');
+                        _Array.insert(results, els);
                     }
                     if (!results.length)
                         return results;
@@ -387,9 +399,8 @@ void function (Anole, window, document) {
                                 if (firstChild.nodeType === 1)
                                     break;
                             } while (firstChild = firstChild.nextSibling);
-                            if (firstChild && !_results[firstChild]) {
+                            if (firstChild) {
                                 _results.push(firstChild);
-                                _results[firstChild] = true;
                             }
                         }
                     }
@@ -402,9 +413,8 @@ void function (Anole, window, document) {
                                 if (lastChild.nodeType === 1)
                                     break;
                             } while (lastChild = lastChild.previousSibling);
-                            if (lastChild && !_results[lastChild]) {
+                            if (lastChild) {
                                 _results.push(lastChild);
-                                _results[lastChild] = true;
                             }
                         }
                     }
@@ -425,9 +435,8 @@ void function (Anole, window, document) {
                     val--;
                     for (var i = 0; i < results.length; i++) {
                         childs = getChilds(results[i].parentNode);
-                        if (childs && childs[val] && !_results[childs[val]]) {
+                        if (childs && childs[val]) {
                             _results.push(childs[val]);
-                            _results[childs[val]] = true;
                         }
                     }
                 },
@@ -441,9 +450,8 @@ void function (Anole, window, document) {
                         childs = getChilds(results[i].parentNode);
                         var pos = childs && (Math.max(childs.length - 1, 0) - val);
 
-                        if (childs && pos >= 0 && childs[pos] && !_results[childs[pos]]) {
+                        if (childs && pos >= 0 && childs[pos]) {
                             _results.push(childs[pos]);
-                            _results[childs[pos]] = true;
                         }
                     }
                 },
@@ -453,9 +461,8 @@ void function (Anole, window, document) {
                         brothers = results[i] && results[i].parentNode.childNodes;
                         if (brothers) {
                             for (var t = 0; t < brothers.length; t++) {
-                                if (brothers[t].nodeType === 1 && brothers[t].nodeName === results[i].nodeName && !_results[brothers[t]]) {
+                                if (brothers[t].nodeType === 1 && brothers[t].nodeName === results[i].nodeName) {
                                     _results.push(brothers[t]);
-                                    _results[brothers[t]] = true;
                                     return;
                                 }
                             }
@@ -468,9 +475,8 @@ void function (Anole, window, document) {
                         brothers = results[i] && results[i].parentNode.childNodes;
                         if (brothers) {
                             for (var t = Math.max(brothers.length - 1, 0); t >= 0; t--) {
-                                if (brothers[t].nodeType === 1 && brothers[t].nodeName === results[i].nodeName && !_results[brothers[t]]) {
+                                if (brothers[t].nodeType === 1 && brothers[t].nodeName === results[i].nodeName) {
                                     _results.push(brothers[t]);
-                                    _results[brothers[t]] = true;
                                     return;
                                 }
                             }
@@ -482,9 +488,8 @@ void function (Anole, window, document) {
                     for (var i = 0; i < results.length; i++) {
                         if (results[i] && results[i].parentNode && results[i].parentNode.childNodes) {
                             total = childTotal(results[i].parentNode.childNodes, results[i].nodeName);
-                            if (total === 1 && !_results[results[i]]) {
+                            if (total === 1) {
                                 _results.push(results[i]);
-                                _results[results[i]] = true;
                             }
                         }
                     }
@@ -497,9 +502,8 @@ void function (Anole, window, document) {
                     val--;
                     for (var i = 0; i < results.length; i++) {
                         brothers = getChilds(results[i].parentNode, results[i].nodeName);
-                        if (brothers && brothers.length && brothers[val] && !_results[brothers[val]]) {
+                        if (brothers && brothers.length && brothers[val]) {
                             _results.push(brothers[val]);
-                            _results[brothers[val]] = true;
                         }
                     }
                 },
@@ -513,25 +517,22 @@ void function (Anole, window, document) {
                     for (var i = 0; i < results.length; i++) {
                         brothers = getChilds(results[i].parentNode, results[i].nodeName);
                         pos = brothers && Math.max(brothers.length - 1, 0) - val;
-                        if (brothers && pos >= 0 && brothers.length && brothers[pos] && !_results[brothers[pos]]) {
+                        if (brothers && pos >= 0 && brothers.length && brothers[pos]) {
                             _results.push(brothers[pos]);
-                            _results[brothers[pos]] = true;
                         }
                     }
                 },
                 'empty' : function (results, _results, val) {
                     for (var i = 0; i < results.length; i++) {
-                        if (results[i] && (!results[i].childNodes || !strTrim(results[i].innerHTML).length) && !_results[results[i]]) {
+                        if (results[i] && (!results[i].childNodes || !strTrim(results[i].innerHTML).length)) {
                             _results.push(results[i]);
-                            _results[results[i]] = true;
                         }
                     }
                 },
                 'checked' : function (results, _results, val) {
                     for (var i = 0; i < results.length; i++) {
-                        if (results[i] && results[i].nodeType === 1 && results[i].nodeName === 'INPUT' && results[i].checked && !_results[results[i]]) {
+                        if (results[i] && results[i].nodeType === 1 && results[i].nodeName === 'INPUT' && results[i].checked) {
                             _results.push(results[i]);
-                            _results[results[i]] = true;
                         }
                     }
                 },
@@ -553,9 +554,8 @@ void function (Anole, window, document) {
                     var hash = location.hash.replace('#', '');
                     if (hash.length) {
                         for (var i = 0; i < results.length; i++) {
-                            if (results[i] && results[i].nodeType === 1 && results[i].id === hash && !_results[results[i]]) {
+                            if (results[i] && results[i].nodeType === 1 && results[i].id === hash) {
                                 _results.push(results[i]);
-                                _results[results[i]] = true;
                             }
                         }
                     }
