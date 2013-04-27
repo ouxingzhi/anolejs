@@ -1,7 +1,7 @@
 /**
  * DOM选择器
  * 兼容ie6+,firefox,chrome,safari,Opera等
- * @author	ouxingzhi / ouxingzhi@vip.qq.com
+ * @author    ouxingzhi / ouxingzhi@vip.qq.com
  */
 void function (Anole, window, document) {
     var strTrim = Anole.String.trim,
@@ -29,7 +29,6 @@ void function (Anole, window, document) {
                     return results;
                 var simpMatch = simpExp.exec(selector),
                 cols;
-                /*
                 if (simpMatch) {
                     if (simpMatch[1] && root.getElementById) {
                         cols = root.getElementById(simpMatch[1]);
@@ -49,7 +48,7 @@ void function (Anole, window, document) {
                     cols = root.querySelectorAll(selector);
                     _Array.insert(results, cols);
                     return results;
-                }*/
+                }
                 return unique(select(selector, root, results));
             }
             function select(selector, root, results) {
@@ -95,7 +94,7 @@ void function (Anole, window, document) {
                 dir = dirs.shift();
 
                 if (!dir || !op)
-                    return parent && [parent] || [];
+                    return [];
                 var struct = cssExp.exec(dir);
                 parent = PATH[op](parent, op, dir, struct);
                 if (!parent || !parent.length)
