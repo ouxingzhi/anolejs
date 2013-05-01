@@ -149,7 +149,9 @@ void function (window, document) {
             }
         }
 	});
+    Anole.NS('Browser').extend({
 
+    });
 	Anole.NS('Class').extend({
 		/**
 		 * 定义类

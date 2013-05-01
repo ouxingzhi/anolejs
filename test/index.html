@@ -14,9 +14,7 @@
                 var messages = [];
 				var list = [];
                 var selectors = [
-					':empty',
-					'div .cls-show',
-					'[rel="stylesheet"]'
+					'div ~ p'
 				];
 				var selector = '';
                 var count = 1;
@@ -28,23 +26,23 @@
 					var els= Anole.dom.query(selector);
 					}
 					var time = new Date() - start;
-					console.log(els);
+					//console.log(els);
 					messages.push('anole:'+ time + ':' +els.length);
 					start = new Date();
 					for(var i=0;i<count;i++){
 						var els = Sizzle(selector);
 					}
 					time = new Date() - start;
-					console.log(els);
+					//console.log(els);
 					messages.push('Sizzle:'+ time + ':' +els.length);
 					start = new Date();
 					for(var i=0;i<count;i++){
 						var els = dom.query(selector);
 					}
 					time = new Date() - start;
-					console.log(els);
+					//console.log(els);
 					messages.push('dom.query:'+ time + ':' +els.length);
-					console.log(messages.join('    '));
+					//console.log(messages.join('    '));
 					list.push(selector + ' : ' + messages.join('/') + '<br />');
 				}
 				output.innerHTML = list.join('');
@@ -53,17 +51,26 @@
 			
         </script>
 	</head>
-	<body>
+	<body class="box">
         <div id="id2">
-            <div class="cls-show"><!-- --> 
+            <div class="cls-show"><!-- -->
 			</div>
             <div class="">
+                <div></div>
 				<p>
 					<link rel="stylesheet" href=""/>
 				</p>
+                <p></p>
+                <div></div>
+                <p></p>
+                <div></div>
+                <p></p>
 			</div>
-            <div class="">c</div>
-
+            <div class="">
+                <div></div>
+                <p></p>
+            </div>
+            
         </div>
 		<div id="out"></div>
 	</body>

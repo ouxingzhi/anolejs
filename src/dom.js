@@ -11,7 +11,7 @@ void function (Anole, window, document) {
     Anole.NS('dom').extend((function () {
             var simpExp = /^(?:#(\w+)|\.(\w+)|(\w+|\*))$/i,
             dirExp = /(?:\s|>|\+|~(?!=))/i,
-            cssExp = /^(\*|[\w-]+)?(?:#([\w-]+))?(?:\.([\w-]+))?(?:\[([\w-]+)(?:([~\^$*|]?=)['"]([\w-]+)['"])?\])?(?:\:([\w-]+)(?:\(([^\(\)]*)\))?)?$/i;
+            cssExp = /^(\*|[\w-]+)?(?:#([\w-]+))?(?:\.([\w-]+))?(?:\[([\w-]+)(?:([~\^$*|]?=)['"]?([\w-]+)['"]?)?\])?(?:\:([\w-]+)(?:\(([^\(\)]*)\))?)?$/i;
             push = Array.prototype.push,
             slice = Array.prototype.slice;
             /**
@@ -83,7 +83,7 @@ void function (Anole, window, document) {
                 i;
                 if (Type.isArray(parent)) {
                     for (i = 0; i < parent.length; i++) {
-                        _Array.insert(results, iteratorPath(parent[i], dirs, ops));
+                        _Array.insert(results, iteratorPath(parent[i], dirs.slice(0), ops.slice(0)));
                     }
                 } else {
                     if (!parent.getElementsByTagName)
@@ -183,8 +183,8 @@ void function (Anole, window, document) {
                     }
                     if (!results.length)
                         return results;
-                    for (var i = 2; i < struct.length; i++) {
-                        if (struct[i] && FILTER[i]) {
+                    for (var i = 1; i < struct.length; i++) {
+                        if (struct[i] && FILTER[i] && results && results.length) {
                             results = FILTER[i](struct[i], results, struct, i);
                         }
                     }
@@ -210,10 +210,12 @@ void function (Anole, window, document) {
                     var results = [],
                     nextSibling = parent;
                     while (nextSibling = nextSibling.nextSibling) {
-                        if (nextSibling.nodeType === 1)
+                        if (nextSibling.nodeType === 1){
+                            results.push(nextSibling);
                             break;
+                        }
                     }
-                    nextSibling && results.push(nextSibling);
+                    
                     if (!results.length)
                         return results;
                     for (var i = 1; i < struct.length; i++) {
@@ -225,12 +227,15 @@ void function (Anole, window, document) {
                 },
                 '~' : function (parent, op, dir, struct) {
                     var results = [],
-                    parentNode = parent.parentNode,
-                    childs;
-                    if (parentNode && (childs = parentNode.childNodes) && childs.length) {
-                        for (var t = 0; t < childs.length; t++) {
-                            if (parent !== childs[t] && childs[t].nodeType === 1)
-                                results.push(childs[t]);
+                    nextSibling = parent,
+                    isTagName = function(el){
+                        if(!struct[1]) return true;
+                        if(struct[1].toLowerCase() !== el.nodeName.toLowerCase()) return false;
+                        return true;
+                    };
+                    while (nextSibling = nextSibling.nextSibling) {
+                        if (nextSibling.nodeType === 1 && isTagName(nextSibling)){
+                            results.push(nextSibling);
                         }
                     }
                     if (!results.length)
@@ -251,7 +256,7 @@ void function (Anole, window, document) {
                 function (tag, results, struct, t) {
                     var _results = [];
                     for (var i = 0; i < results.length; i++) {
-                        if (results[i].nodeName.toLowerCase() === tag.toLowerCase())
+                        if (results[i].nodeName.toLowerCase() === tag.toLowerCase() || (tag === '*' && results[i].nodeType === 1))
                             _results.push(results[i]);
                     }
                     return _results;
@@ -275,16 +280,18 @@ void function (Anole, window, document) {
                     return _results;
                 },
                 //Attribute
-                function (attr, results, struct, t) {
+                function (attrName, results, struct, t) {
                     var _results = [],
                     op = struct[t + 1],
                     val = struct[t + 2],
-                    attrs,
+                    domVal,
                     i,
                     t;
-					__count++;
+					
                     for (i = 0; i < results.length; i++) {
-                        ATTR[op || ''](results[i].attributes, attr, val) && _results.push(results[i]);
+                        domVal = results[i].getAttribute(attrName);
+                        domVal && ATTR[op || ''](domVal, attrName, val) && _results.push(results[i]);
+                        __count++;
                     }
                     return _results;
                 },
@@ -307,77 +314,37 @@ void function (Anole, window, document) {
              * 属性选择器
              */
             var ATTR = {
-                '' : function (attrs, name, val) {
-                    for (var i = 0; i < attrs.length; i++) {
-                        if (attrs.item(i).name === name)
-                            return true;
-                    }
+                '' : function (domVal, name, val) {
+                    if (domAttr === name) return true;
                     return false;
                 },
-                '=' : function (attrs, name, val) {
-                    var attr;
-                    if (!attrs || !attrs.length)
-                        return false;
-                    for (var i = 0; i < attrs.length; i++) {
-                        attr = attrs[i];
-                        if (attr.name === name && attr.value === val)
-                            return true;
-                    }
+                '=' : function (domVal, name, val) {
+                    if(domVal === val) return true;
                     return false;
                 },
-                '~=' : function (attrs, name, val) {
-                    var attr;
-                    if (!attrs)
-                        return false;
-                    for (var i = 0; i < attrs.length; i++) {
-                        attr = attrs.item(i);
-                        if (attr.name === name && (attr.value + '').match(new RegExp('(?:\\s|^)' + val + '(?:\\s|$)', 'ig')))
-                            return true;
-                    }
+                '~=' : function (domVal, name, val) {
+                    if ((domVal + '').match(new RegExp('(?:\\s|^)' + val + '(?:\\s|$)', 'ig')))
+                        return true;
                     return false;
                 },
-                '^=' : function (attrs, name, val) {
-                    var attr;
-                    if (!attrs)
-                        return false;
-                    for (var i = 0; i < attrs.length; i++) {
-                        attr = attrs.item(i);
-                        if (attr.name === name && (attr.value + '').match(new RegExp('^' + val, 'ig')))
-                            return true;
-                    }
+                '^=' : function (domVal, name, val) {
+                    if ((domVal + '').match(new RegExp('^' + val, 'ig')))
+                        return true;
                     return false;
                 },
-                '$=' : function (attrs, name, val) {
-                    var attr;
-                    if (!attrs)
-                        return false;
-                    for (var i = 0; i < attrs.length; i++) {
-                        attr = attrs.item(i);
-                        if (attr.name === name && (attr.value + '').match(new RegExp(val + '$', 'ig')))
-                            return true;
-                    }
+                '$=' : function (domVal, name, val) {
+                    if ((domVal + '').match(new RegExp(val + '$', 'ig')))
+                        return true;
                     return false;
                 },
-                '*=' : function (attrs, name, val) {
-                    var attr;
-                    if (!attrs)
-                        return false;
-                    for (var i = 0; i < attrs.length; i++) {
-                        attr = attrs.item(i);
-                        if (attr.name === name && (attr.value + '').indexOf(val) > -1)
-                            return true;
-                    }
+                '*=' : function (domVal, name, val) {
+                    if ((domVal + '').indexOf(val) > -1)
+                        return true;
                     return false;
                 },
-                '|=' : function (attrs, name, val) {
-                    var attr;
-                    if (!attrs)
-                        return false;
-                    for (var i = 0; i < attrs.length; i++) {
-                        attr = attrs.item(i);
-                        if (attr.name === name && (attr.value + '').match(new RegExp('^' + val + '-', 'ig')))
-                            return true;
-                    }
+                '|=' : function (domVal, name, val) {
+                    if ((domVal + '').match(new RegExp('^' + val + '-', 'ig')))
+                        return true;
                     return false;
                 }
             };
