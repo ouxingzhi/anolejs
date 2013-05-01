@@ -3,6 +3,7 @@
  * 兼容ie6+,firefox,chrome,safari,Opera等
  * @author    ouxingzhi / ouxingzhi@vip.qq.com
  */
+var __count = 0;
 void function (Anole, window, document) {
     var strTrim = Anole.String.trim,
     Type = Anole.Type,
@@ -27,6 +28,7 @@ void function (Anole, window, document) {
                     return results;
                 if (!selector)
                     return results;
+				/*
                 var simpMatch = simpExp.exec(selector),
                 cols;
                 if (simpMatch) {
@@ -49,6 +51,7 @@ void function (Anole, window, document) {
                     _Array.insert(results, cols);
                     return results;
                 }
+				*/
                 return unique(select(selector, root, results));
             }
             function select(selector, root, results) {
@@ -138,7 +141,9 @@ void function (Anole, window, document) {
                 }
                 return total;
             }
-            //去重
+            /*
+			 * 对数组中的元素去重
+			 */
             function unique(arr){
                 if(arr.length <=1) return arr;
                 var l = [],k={},cur,i,t;
@@ -195,7 +200,7 @@ void function (Anole, window, document) {
                     if (!results.length)
                         return results;
                     for (var i = 1; i < struct.length; i++) {
-                        if (struct[i] && FILTER[i]) {
+                        if (struct[i] && FILTER[i] && results && results.length) {
                             results = FILTER[i](struct[i], results, struct, i);
                         }
                     }
@@ -212,7 +217,7 @@ void function (Anole, window, document) {
                     if (!results.length)
                         return results;
                     for (var i = 1; i < struct.length; i++) {
-                        if (struct[i] && FILTER[i]) {
+                        if (struct[i] && FILTER[i] && results && results.length) {
                             results = FILTER[i](struct[i], results, struct, i);
                         }
                     }
@@ -231,7 +236,7 @@ void function (Anole, window, document) {
                     if (!results.length)
                         return results;
                     for (var i = 1; i < struct.length; i++) {
-                        if (struct[i] && FILTER[i]) {
+                        if (struct[i] && FILTER[i] && results && results.length) {
                             results = FILTER[i](struct[i], results, struct, i);
                         }
                     }
@@ -277,6 +282,7 @@ void function (Anole, window, document) {
                     attrs,
                     i,
                     t;
+					__count++;
                     for (i = 0; i < results.length; i++) {
                         ATTR[op || ''](results[i].attributes, attr, val) && _results.push(results[i]);
                     }
@@ -292,9 +298,8 @@ void function (Anole, window, document) {
                     dispose = PSEUDO[pseudo];
                     if (!dispose)
                         return _results;
-                    for (var i = 0; i < results.length; i++) {
-                        dispose(results, _results, val);
-                    }
+                    
+                    dispose(results, _results, val);
                     return _results;
                 }
             ];
@@ -311,10 +316,10 @@ void function (Anole, window, document) {
                 },
                 '=' : function (attrs, name, val) {
                     var attr;
-                    if (!attrs)
+                    if (!attrs || !attrs.length)
                         return false;
                     for (var i = 0; i < attrs.length; i++) {
-                        attr = attrs.item(i);
+                        attr = attrs[i];
                         if (attr.name === name && attr.value === val)
                             return true;
                     }
@@ -522,10 +527,8 @@ void function (Anole, window, document) {
                     }
                 },
                 'empty' : function (results, _results, val) {
-                    var id;
-                    console.log(results[0].className,results[1].className);
                     for (var i = 0; i < results.length; i++) {
-                        if (results[i] && (!results[i].childNodes || !strTrim(results[i].innerHTML).length)) {
+                        if (results[i] && results[i].nodeType === 1 && isEmpty(results[i])) {
                             _results.push(results[i]);
                         }
                     }
@@ -562,6 +565,14 @@ void function (Anole, window, document) {
                     }
                 }
             };
+			function isEmpty(node){
+				var childNodes,i,reg = /[^\s]/;
+				if(!node || !(childNodes = node.childNodes)) return false;
+				for(i=0;i<childNodes.length;i++){
+					if(childNodes[i].nodeType === 1 || childNodes[i].nodeType === 4 || childNodes[i].nodeType === 8 || (childNodes[i].nodeType === 3 && childNodes[i].data.match(reg))) return false;
+				}
+				return true;
+			}
             return {
                 query : query
             }
