@@ -9,16 +9,17 @@
         <script src="http://files.cnblogs.com/rubylouvre/icarus.js"></script>
         <script type="text/javascript">
             window.onload = function(){
-				var output = Anole.dom.query('#out')[0];
+				var output = document.getElementById('out');
 			
                 var messages = [];
 				var list = [];
                 var selectors = [
-					'#id2 div',
+					':empty',
+					'div .cls-show',
 					'[rel="stylesheet"]'
 				];
 				var selector = '';
-                var count = 1000;
+                var count = 1;
 				for(var tt=0;tt<selectors.length;tt++){
 					messages = [];
 					selector = selectors[tt];
@@ -34,23 +35,28 @@
 						var els = Sizzle(selector);
 					}
 					time = new Date() - start;
+					console.log(els);
 					messages.push('Sizzle:'+ time + ':' +els.length);
 					start = new Date();
 					for(var i=0;i<count;i++){
 						var els = dom.query(selector);
 					}
 					time = new Date() - start;
+					console.log(els);
 					messages.push('dom.query:'+ time + ':' +els.length);
 					console.log(messages.join('    '));
 					list.push(selector + ' : ' + messages.join('/') + '<br />');
 				}
 				output.innerHTML = list.join('');
+				alert(__count);
             };
+			
         </script>
 	</head>
 	<body>
         <div id="id2">
-            <div class="cls-show">a</div>
+            <div class="cls-show"><!-- --> 
+			</div>
             <div class="">
 				<p>
 					<link rel="stylesheet" href=""/>
