@@ -13,7 +13,7 @@
                 var messages = [];
 				var list = [];
                 var selectors = [
-					'div ~ p'
+					'div[class]'
 				];
 				var selector = '';
                 var count = 1;
@@ -45,7 +45,7 @@
 					list.push(selector + ' : ' + messages.join('/') + '<br />');
 				}
 				output.innerHTML = list.join('');
-				alert(__count);
+				//alert(__count);
             };
 			
         </script>

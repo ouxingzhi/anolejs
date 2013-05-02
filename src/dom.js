@@ -289,7 +289,7 @@ void function (Anole, window, document) {
                     t;
 					
                     for (i = 0; i < results.length; i++) {
-                        domVal = results[i].getAttribute(attrName);
+                        domVal = attrName === 'class' ? results[i].className : results[i].getAttribute(attrName);
                         domVal && ATTR[op || ''](domVal, attrName, val) && _results.push(results[i]);
                         __count++;
                     }
@@ -315,7 +315,7 @@ void function (Anole, window, document) {
              */
             var ATTR = {
                 '' : function (domVal, name, val) {
-                    if (domAttr === name) return true;
+                    if (domVal !== null) return true;
                     return false;
                 },
                 '=' : function (domVal, name, val) {
