@@ -31,7 +31,7 @@
 
 <iframe name='MooTools 1.3.1' src='SlickSpeedSelectorsTest_files/template.php?include=mootools1.3.1.js&function=$$&nocache=<?php echo $nocache;?>'></iframe>
 
-<iframe name='JQuery 1.5.1' src='SlickSpeedSelectorsTest_files/template.php?include=jquery1.5.1.js&function=$&nocache=<?php echo $nocache;?>'></iframe>
+<iframe name='JQuery 1.5.1' src='SlickSpeedSelectorsTest_files/template.php?include=jquery1.5.1.js&function=jQuery&nocache=<?php echo $nocache;?>'></iframe>
 
 <iframe name='Prototype 1.7' src='SlickSpeedSelectorsTest_files/template.php?include=prototype1.7.js&function=$$&nocache=<?php echo $nocache;?>'></iframe>
 

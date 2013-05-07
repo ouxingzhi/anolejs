@@ -11,7 +11,8 @@ void function (Anole, window, document) {
     Anole.NS('dom').extend((function () {
             var simpExp = /^(?:#(\w+)|\.(\w+)|(\w+|\*))$/i,
             dirExp = /(?:\s|>|\+|~(?!=))/i,
-            cssExp = /^(\*|[\w-]+)?(?:#([\w-]+))?(?:\.([\w-]+))?(?:\[([\w-]+)(?:([~\^$*|]?=)['"]?([\w-]+)['"]?)?\])?(?:\:([\w-]+)(?:\(([^\(\)]*)\))?)?$/i;
+            cssExp = /^(\*|[\w-]+)?(?:#([\w-]+))?(?:\.([\w-]+))?((?:\[[\w-]+(?:[~\^$*|]?=['"]?[\w-]*['"]?)?\])*)?(?:\:([\w-]+)(?:\(([^\(\)]*)\))?)?$/i;
+            attrExp = /\[([\w-]+)(?:(=|~=|\^=|\$=|\*=|\|=)["']([\w-]*)["'])?\]/img;
             push = Array.prototype.push,
             slice = Array.prototype.slice;
             /**
@@ -145,22 +146,29 @@ void function (Anole, window, document) {
 			 * 对数组中的元素去重
 			 */
             function unique(arr){
-                if(arr.length <=1) return arr;
-                var l = [],k={},cur,i,t;
-                for(i=0,len=arr.length;i<len;i++){
-                    cur = arr[i];
-                    for(t=i+1;t<len;t++){
-                        if(cur === arr[t] && !k[t]){
-                            l.push(t);
-                            k[t] = true;
+                var _arr = arr.slice(0),cur;
+                for(var i=0,len=_arr.length;i<len;i++){
+                    cur = _arr[i];
+                    for(var t=i+1;t<len;t++){
+                        if(cur === _arr[t]){
+                            _arr.splice(t,1);
+                            t--;
+                            len = _arr.length;
                         }
                     }
                 }
-                l = l.reverse();
-                for(i=0;i<l.length;i++){
-                    arr.splice(l[i],1);
-                }
-                return arr;
+                return _arr;
+            }
+            function parseAttr(str){
+                var attrs = [];
+                str.replace(attrExp,function(s,name,op,value){
+                    attrs.push({
+                        name:name,
+                        op:op,
+                        value:value
+                    });
+                });
+                return attrs;
             }
             /*
              * 层级关系选择
@@ -280,19 +288,17 @@ void function (Anole, window, document) {
                     return _results;
                 },
                 //Attribute
-                function (attrName, results, struct, t) {
+                function (attrs, results, struct, t) {
                     var _results = [],
-                    op = struct[t + 1],
-                    val = struct[t + 2],
                     domVal,
                     i,
                     t;
-					
-                    for (i = 0; i < results.length; i++) {
+					console.log(parseAttr(attrs));
+                    /*for (i = 0; i < results.length; i++) {
                         domVal = attrName === 'class' ? results[i].className : results[i].getAttribute(attrName);
                         domVal && ATTR[op || ''](domVal, attrName, val) && _results.push(results[i]);
                         __count++;
-                    }
+                    }*/
                     return _results;
                 },
                 null,

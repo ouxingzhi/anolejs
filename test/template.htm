@@ -5,7 +5,6 @@
 		<script type="text/javascript" src="sizzle.js"></script>
 		<script type="text/javascript" src="../src/core.js"></script>
         <script type="text/javascript" src="../src/dom.js"></script>
-        <script src="http://files.cnblogs.com/rubylouvre/icarus.js"></script>
         <script type="text/javascript">
             window.onload = function(){
 				var output = document.getElementById('out');
@@ -13,7 +12,7 @@
                 var messages = [];
 				var list = [];
                 var selectors = [
-					'div[class]'
+					'div[class="ddd"][name][alt~="sds"]'
 				];
 				var selector = '';
                 var count = 1;
@@ -25,7 +24,7 @@
 					var els= Anole.dom.query(selector);
 					}
 					var time = new Date() - start;
-					//console.log(els);
+					console.log(els);
 					messages.push('anole:'+ time + ':' +els.length);
 					start = new Date();
 					for(var i=0;i<count;i++){
@@ -34,14 +33,6 @@
 					time = new Date() - start;
 					//console.log(els);
 					messages.push('Sizzle:'+ time + ':' +els.length);
-					start = new Date();
-					for(var i=0;i<count;i++){
-						var els = dom.query(selector);
-					}
-					time = new Date() - start;
-					//console.log(els);
-					messages.push('dom.query:'+ time + ':' +els.length);
-					//console.log(messages.join('    '));
 					list.push(selector + ' : ' + messages.join('/') + '<br />');
 				}
 				output.innerHTML = list.join('');
