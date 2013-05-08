@@ -11,8 +11,9 @@ void function (Anole, window, document) {
     Anole.NS('dom').extend((function () {
             var simpExp = /^(?:#(\w+)|\.(\w+)|(\w+|\*))$/i,
             dirExp = /(?:\s|>|\+|~(?!=))/i,
-            cssExp = /^(\*|[\w-]+)?(?:#([\w-]+))?(?:\.([\w-]+))?((?:\[[\w-]+(?:[~\^$*|]?=['"]?[\w-]*['"]?)?\])*)?(?:\:([\w-]+)(?:\(([^\(\)]*)\))?)?$/i;
-            attrExp = /\[([\w-]+)(?:(=|~=|\^=|\$=|\*=|\|=)["']([\w-]*)["'])?\]/img;
+            cssExp = /^(\*|[\w-]+)?(?:#([\w-]+))?(?:\.([\w-]+))?((?:\[[\w-]+(?:[~\^$*|!]?=['"]?[\w-]*['"]?)?\])*)?(?:\:([\w-]+)(?:\(([^\(\)]*)\))?)?$/i;
+            attrExp = /\[([\w-]+)(?:(=|~=|\^=|\$=|\*=|\|=)["']?([\w-]*)["']?)?\]/img;
+			psnumExp = /(even|odd)|(([+-]?)(\d{1,})?n[+-]?\d{1,})/i;
             push = Array.prototype.push,
             slice = Array.prototype.slice;
             /**
@@ -29,7 +30,7 @@ void function (Anole, window, document) {
                     return results;
                 if (!selector)
                     return results;
-				/*
+				
                 var simpMatch = simpExp.exec(selector),
                 cols;
                 if (simpMatch) {
@@ -52,7 +53,7 @@ void function (Anole, window, document) {
                     _Array.insert(results, cols);
                     return results;
                 }
-				*/
+				
                 return unique(select(selector, root, results));
             }
             function select(selector, root, results) {
@@ -170,6 +171,28 @@ void function (Anole, window, document) {
                 });
                 return attrs;
             }
+			function isAttr(el,attr){
+				var attrName = attr.name,
+					op = attr.op,
+					val = attr.value;
+				domVal = attrName === 'class' ? el.className : el.getAttribute(attrName);
+                return !!(ATTR[op || ''](domVal, attrName, val));
+			}
+			function isAttrAnd(el,arr){
+				var allow = true;
+				for(var i=0;i<arr.length;i++){
+					if(!isAttr(el,arr[i])) return false;
+				}
+				return true;
+			}
+			function isEmpty(node){
+				var childNodes,i,reg = /[^\s]/;
+				if(!node || !(childNodes = node.childNodes)) return false;
+				for(i=0;i<childNodes.length;i++){
+					if(childNodes[i].nodeType === 1 || childNodes[i].nodeType === 4 || childNodes[i].nodeType === 8 || (childNodes[i].nodeType === 3 && childNodes[i].data.match(reg))) return false;
+				}
+				return true;
+			}
             /*
              * 层级关系选择
              */
@@ -292,17 +315,15 @@ void function (Anole, window, document) {
                     var _results = [],
                     domVal,
                     i,
-                    t;
-					console.log(parseAttr(attrs));
-                    /*for (i = 0; i < results.length; i++) {
-                        domVal = attrName === 'class' ? results[i].className : results[i].getAttribute(attrName);
-                        domVal && ATTR[op || ''](domVal, attrName, val) && _results.push(results[i]);
-                        __count++;
-                    }*/
+                    t,
+					objs = parseAttr(attrs);
+                    for (i = 0; i < results.length; i++) {
+                        if(isAttrAnd(results[i],objs)){
+							_results.push(results[i]);
+						}
+                    }
                     return _results;
                 },
-                null,
-                null,
                 //Pseudo Classes
                 function (pseude, results, struct, t) {
                     var _results = [],
@@ -352,6 +373,10 @@ void function (Anole, window, document) {
                     if ((domVal + '').match(new RegExp('^' + val + '-', 'ig')))
                         return true;
                     return false;
+                },
+                '!=' : function (domVal, name, val) {
+                    if(domVal !== val) return true;
+                    return false;
                 }
             };
             /*
@@ -376,7 +401,7 @@ void function (Anole, window, document) {
                                 if (firstChild.nodeType === 1)
                                     break;
                             } while (firstChild = firstChild.nextSibling);
-                            if (firstChild) {
+                            if (firstChild.nodeName === results[i].nodeName) {
                                 _results.push(firstChild);
                             }
                         }
@@ -387,10 +412,9 @@ void function (Anole, window, document) {
                     for (var i = 0; i < results.length; i++) {
                         if (results[i] && results[i].parentNode && (lastChild = results[i].parentNode.lastChild)) {
                             do {
-                                if (lastChild.nodeType === 1)
-                                    break;
+                                if (lastChild.nodeType === 1) break;
                             } while (lastChild = lastChild.previousSibling);
-                            if (lastChild) {
+                            if (lastChild.nodeName === results[i].nodeName) {
                                 _results.push(lastChild);
                             }
                         }
@@ -406,13 +430,14 @@ void function (Anole, window, document) {
                 },
                 'nth-child' : function (results, _results, val) {
                     var childs;
+					console.log(val);
                     val = parseInt(val);
                     if (isNaN(val))
                         return;
                     val--;
                     for (var i = 0; i < results.length; i++) {
                         childs = getChilds(results[i].parentNode);
-                        if (childs && childs[val]) {
+                        if (childs && childs[val] && childs[val].nodeName === results[i].nodeName) {
                             _results.push(childs[val]);
                         }
                     }
@@ -538,14 +563,7 @@ void function (Anole, window, document) {
                     }
                 }
             };
-			function isEmpty(node){
-				var childNodes,i,reg = /[^\s]/;
-				if(!node || !(childNodes = node.childNodes)) return false;
-				for(i=0;i<childNodes.length;i++){
-					if(childNodes[i].nodeType === 1 || childNodes[i].nodeType === 4 || childNodes[i].nodeType === 8 || (childNodes[i].nodeType === 3 && childNodes[i].data.match(reg))) return false;
-				}
-				return true;
-			}
+			
             return {
                 query : query
             }
