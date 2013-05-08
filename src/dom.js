@@ -13,7 +13,7 @@ void function (Anole, window, document) {
             dirExp = /(?:\s|>|\+|~(?!=))/i,
             cssExp = /^(\*|[\w-]+)?(?:#([\w-]+))?(?:\.([\w-]+))?((?:\[[\w-]+(?:[~\^$*|!]?=['"]?[\w-]*['"]?)?\])*)?(?:\:([\w-]+)(?:\(([^\(\)]*)\))?)?$/i;
             attrExp = /\[([\w-]+)(?:(=|~=|\^=|\$=|\*=|\|=)["']?([\w-]*)["']?)?\]/img;
-			psnumExp = /(even|odd)|(([+-]?)(\d{1,})?n[+-]?\d{1,})/i;
+			psnumExp = /^(even|odd)|(\d{1,})?(n)|(\d{1,})$/i;
             push = Array.prototype.push,
             slice = Array.prototype.slice;
             /**
@@ -30,7 +30,7 @@ void function (Anole, window, document) {
                     return results;
                 if (!selector)
                     return results;
-				
+				/*
                 var simpMatch = simpExp.exec(selector),
                 cols;
                 if (simpMatch) {
@@ -53,7 +53,7 @@ void function (Anole, window, document) {
                     _Array.insert(results, cols);
                     return results;
                 }
-				
+				*/
                 return unique(select(selector, root, results));
             }
             function select(selector, root, results) {
@@ -431,14 +431,32 @@ void function (Anole, window, document) {
                 'nth-child' : function (results, _results, val) {
                     var childs;
 					console.log(val);
-                    val = parseInt(val);
-                    if (isNaN(val))
-                        return;
-                    val--;
+                    var matchs = psnumExp.exec(val),c;
+                    
                     for (var i = 0; i < results.length; i++) {
                         childs = getChilds(results[i].parentNode);
-                        if (childs && childs[val] && childs[val].nodeName === results[i].nodeName) {
-                            _results.push(childs[val]);
+                        if(childs){
+                            if(matchs[1]){
+                                for(var t=0;t<childs.length;t++){
+                                    if(matchs[1] === 'odd' && t%2){
+                                        _results.push(childs[t]);
+                                    }else if(matchs[1] === 'even' && !t%2){
+                                        _results.push(childs[t]);
+                                    }
+                                }
+                            }else if(matchs[3]){
+                                var mul = Number(matchs[2] || 1);
+                                for(var t=0;t<childs.length;t++){
+                                    if(t+1 >= mul && !(t+1)%mul){
+                                        _results.push(childs[t]);
+                                    }
+                                }
+                            }else if(matchs[4]){
+                                c = parseInt(matchs[4]);
+                                if (childs[c]) {
+                                    _results.push(childs[c]);
+                                }
+                            }
                         }
                     }
                 },
