@@ -430,29 +430,33 @@ void function (Anole, window, document) {
                 },
                 'nth-child' : function (results, _results, val) {
                     var childs;
-					console.log(val);
-                    var matchs = psnumExp.exec(val),c;
+                    var matchs = psnumExp.exec(val),c,tt;
                     
                     for (var i = 0; i < results.length; i++) {
                         childs = getChilds(results[i].parentNode);
                         if(childs){
                             if(matchs[1]){
                                 for(var t=0;t<childs.length;t++){
-                                    if(matchs[1] === 'odd' && t%2){
-                                        _results.push(childs[t]);
-                                    }else if(matchs[1] === 'even' && !t%2){
-                                        _results.push(childs[t]);
+                                    tt=t+1;
+                                    if(results[i].nodeName === childs[t].nodeName){
+                                        if(matchs[1] === 'odd' && tt%2){
+                                            _results.push(childs[t]);
+                                        }else if(matchs[1] === 'even' && !(tt%2)){
+                                            _results.push(childs[t]);
+                                        }
                                     }
                                 }
                             }else if(matchs[3]){
                                 var mul = Number(matchs[2] || 1);
                                 for(var t=0;t<childs.length;t++){
-                                    if(t+1 >= mul && !(t+1)%mul){
+                                    tt = t+1;
+                                    if(results[i].nodeName !== childs[t].nodeName) continue;
+                                    if(tt >= mul && !((tt)%mul)){
                                         _results.push(childs[t]);
                                     }
                                 }
                             }else if(matchs[4]){
-                                c = parseInt(matchs[4]);
+                                c = Math.max(parseInt(matchs[4])-1,0);
                                 if (childs[c]) {
                                     _results.push(childs[c]);
                                 }

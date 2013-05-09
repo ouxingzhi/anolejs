@@ -14,7 +14,7 @@
                 var messages = [];
 				var list = [];
                 var selectors = [
-					'div ~ p'
+					'#id2 p:nth-child(odd)'
 				];
 				var selector = '';
                 var count = 1;
@@ -26,14 +26,14 @@
 					var els= Anole.dom.query(selector);
 					}
 					var time = new Date() - start;
-					//console.log(els);
+					console.log(els);
 					messages.push('anole:'+ time + ':' +els.length);
 					start = new Date();
 					for(var i=0;i<count;i++){
 						var els = Sizzle(selector);
 					}
 					time = new Date() - start;
-					//console.log(els);
+					console.log(els);
 					messages.push('Sizzle:'+ time + ':' +els.length);
 					start = new Date();
 					for(var i=0;i<count;i++){
@@ -46,31 +46,24 @@
 					list.push(selector + ' : ' + messages.join('/') + '<br />');
 				}
 				output.innerHTML = list.join('');
-				alert(__count);
             };
 			
         </script>
 	</head>
 	<body class="box">
         <div id="id2">
-            <div class="cls-show"><!-- -->
-			</div>
-            <div class="">
-                <div></div>
-				<p>
-					<link rel="stylesheet" href=""/>
-				</p>
-                <p></p>
-                <div></div>
-                <p></p>
-                <div></div>
-                <p></p>
-			</div>
-            <div class="">
-                <div></div>
-                <p></p>
-            </div>
-            
+            <div class="d0">0</div>
+            <div class="d1">1</div>
+            <p class="c1">1</p>
+            <div class="d2">2</div>
+            <div class="d3">3</div>
+            <p class="c2">2</p>
+            <div class="d4">4</div>
+            <p class="c3">3</p>
+            <p class="c4">4</p>
+            <p class="c5">5</p>
+            <p class="c6">6</p>
+            <p class="c7">7</p>
         </div>
 		<div id="out"></div>
 	</body>
